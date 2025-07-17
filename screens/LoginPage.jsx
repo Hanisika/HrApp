@@ -21,16 +21,18 @@ export default function LoginPage() {
         password: password.trim()
       });
 
-      if (response.data.success) {
-        const { role, hrEmail, firmName } = response.data;
+     if (response.data.success) {
+  const { role, hrEmail, firmName } = response.data;
 
-        if (hrEmail) {
-          await AsyncStorage.setItem('hrEmail', hrEmail);
-          await AsyncStorage.setItem('firmName', firmName || '');
-        }
+  // ✅ Save to AsyncStorage
+  await AsyncStorage.setItem('role', role); // 👈 THIS IS MISSING
+  if (hrEmail) {
+    await AsyncStorage.setItem('hrEmail', hrEmail);
+    await AsyncStorage.setItem('firmName', firmName || '');
+  }
 
-        navigation.navigate(role === 'hr' ? 'HRDashboard' : 'Dashboard', { role });
-      } else {
+  navigation.navigate(role === 'hr' ? 'HRDashboard' : 'Dashboard', { role });
+} else {
         Alert.alert('Login Failed', response.data.message || 'Invalid credentials.');
       }
     } catch (error) {

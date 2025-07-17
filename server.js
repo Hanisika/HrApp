@@ -4,7 +4,7 @@ const cors=require('cors');
 const bodyParser=require('body-parser');
 const AddEmployee = require('./routes/FormRoutes');
 const authRoute = require('./routes/auth');
-const taskRoutes = require('./routes/task');
+const ProjectRoutes=require('./routes/projectRoutes')
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const app=express();
@@ -89,9 +89,7 @@ app.use('/get-employee', require('./routes/getEmployee'));
 app.use('/update-employee', require('./routes/updateEmployee'));
 app.use('/delete-employee', require('./routes/deleteEmployee'));
 app.use('/attendance', require('./routes/attendence'));
-// app.use('/leave', leaveRoutes);
-app.use('/task', taskRoutes);
-
+app.use('/', ProjectRoutes); 
 
 app.listen(5000, () => {
   console.log('Server started on port 5000');

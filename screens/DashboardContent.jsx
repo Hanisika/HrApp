@@ -5,10 +5,13 @@ import axios from 'axios';
 import * as Location from 'expo-location';
 import { ActivityIndicator } from 'react-native';
 
+import ProjectAssign from './projectAssign';
+import ProjectDetails from './projectDetails';
+import ProjectStatus from './ProjectStatus';
 
-const DashboardContent = ({ route }) => {
+
+const DashboardContent = ({ role }) => {
   const [loading, setLoading] = useState(false);
-  const { role } = route.params || '';
   const [email, setEmail] = useState('');
   const [isPunchedIn, setIsPunchedIn] = useState(false);
   const [punchInTime, setPunchInTime] = useState('');
@@ -186,7 +189,32 @@ const handlePunch = async () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-     <Text style={styles.header}>Welcome, { userName || role}</Text>
+   <Text style={{ fontSize: 24, marginBottom: 20 }}>
+        Welcome {role?.toUpperCase()}
+      </Text>
+
+      {role === 'hr' && (
+        <>
+          <ProjectAssign/>
+          <ProjectDetails/>
+          <ProjectStatus/>
+        </>
+      )}
+
+      {role === 'manager' && (
+        <>
+            <ProjectAssign/>
+          <ProjectDetails/>
+          <ProjectStatus/>
+        </>
+      )}
+
+      {role === 'employee' && (
+        <>
+        <ProjectDetails/>
+        <ProjectStatus/>
+        </>
+      )}
 
 
       <View style={styles.card}>
