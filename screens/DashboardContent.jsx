@@ -192,11 +192,11 @@ const handlePunch = async () => {
    <Text style={{ fontSize: 24, marginBottom: 20 }}>
         Welcome {role?.toUpperCase()}
       </Text>
-
+{/* 
       {role === 'hr' && (
         <>
           <ProjectAssign/>
-          <ProjectDetails/>
+       
           <ProjectStatus/>
         </>
       )}
@@ -204,7 +204,7 @@ const handlePunch = async () => {
       {role === 'manager' && (
         <>
             <ProjectAssign/>
-          <ProjectDetails/>
+      
           <ProjectStatus/>
         </>
       )}
@@ -214,7 +214,7 @@ const handlePunch = async () => {
         <ProjectDetails/>
         <ProjectStatus/>
         </>
-      )}
+      )} */}
 
 
       <View style={styles.card}>

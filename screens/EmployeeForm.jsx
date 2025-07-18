@@ -24,18 +24,30 @@ const EmployeeForm = () => {
     HR: ['Recruiter', 'Payroll Officer'],
   };
 
-  useEffect(() => {
-    const loadFirm = async () => {
-      const storedFirm = await AsyncStorage.getItem('firmName');
-      if (storedFirm) setFirmName(storedFirm);
-    };
-    loadFirm();
-  }, []);
+useEffect(() => {
+  const getFirmName = async () => {
+    try {
+      const firm = await AsyncStorage.getItem('firmName');
+      console.log('📦 Firm from AsyncStorage:', firm);
+      if (firm) {
+        setFirmName(firm);
+      } else {
+        console.warn('⚠️ firmName not found in AsyncStorage');
+      }
+    } catch (error) {
+      console.error('Error fetching firmName from storage:', error);
+    }
+  };
+
+  getFirmName();
+}, []);
+
 
   const handleSubmit = async () => {
     if (!name || !email || !phone || !joinDate || !department || !designation || !firmName) {
-      Alert.alert('Validation Error', 'Please fill in all required fields.');
-      return;
+      console.log('🛑 Missing Fields:', { name, email, phone, joinDate, department, designation, firmName });
+  Alert.alert('Validation Error', 'Please fill in all required fields.');
+  return;
     }
 
     const employeeData = {

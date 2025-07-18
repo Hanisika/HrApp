@@ -1,29 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const ProjectAssignment = require('../model/projectAssignment');
-const ProjectUpdate = require('../model/projectUpdate');
-const Project = require('../model/project');
+const Employee=require('../model/Employee')
 
-// 🔹 Route to assign a project
-router.post('/assign', async (req, res) => {
+// 🔹 PUT /assign-project (update employee with project info)
+router.put('/assign-project', async (req, res) => {
   try {
-    const { projectId, projectName, description, teamId, employees } = req.body;
+    const { employeeEmail, projectName, team, reportingManager } = req.body;
 
-    const assignment = new ProjectAssignment({
-      projectId,
-      projectName,
-      description,
-      teamId,
-      employees,
+    const employee = await Employee.findOne({ email: employeeEmail });
+
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    employee.projectName = projectName;
+    employee.team = team;
+    employee.reportingManager = reportingManager;
+
+    await employee.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Project assigned successfully',
+      data: employee,
     });
-
-    await assignment.save();
-    res.status(201).json({ message: 'Project assigned successfully' });
-  } catch (error) {
-    console.error('Error assigning project:', error);
-    res.status(500).json({ message: 'Failed to assign project' });
+  } catch (err) {
+    console.error('Assign project error:', err);
+    res.status(500).json({ success: false, message: 'Failed to assign project' });
   }
 });
+
 
 // 🔹 Route to get all assigned projects
 router.get('/assignments', async (req, res) => {
@@ -40,21 +46,16 @@ router.get('/assignments', async (req, res) => {
 router.get('/projects/employee/:email', async (req, res) => {
   const { email } = req.params;
   try {
-    const assignments = await ProjectAssignment.find({ employees: email });
+    const employee = await User.findOne({ email });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
 
-    // Optional: Populate project info from Project collection
-    const detailedProjects = await Promise.all(
-      assignments.map(async (assignment) => {
-        const project = await Project.findById(assignment.projectId);
-        return {
-          _id: project?._id || assignment.projectId,
-          projectName: assignment.projectName || project?.name || 'Unnamed Project',
-          description: assignment.description || project?.description || '',
-        };
-      })
-    );
-
-    res.json({ projects: detailedProjects });
+    res.json({
+      projectName: employee.projectName,
+      team: employee.team,
+      reportingManager: employee.reportingManager,
+    });
   } catch (err) {
     console.error('Error fetching employee projects:', err);
     res.status(500).json({ message: 'Failed to get projects for employee' });

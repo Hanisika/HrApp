@@ -1,126 +1,131 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 export default function ProjectStatus() {
-  const [employeeEmail, setEmployeeEmail] = useState('');
-  const [assignedProjects, setAssignedProjects] = useState([]);
-  const [projectUpdates, setProjectUpdates] = useState({});
-  const [newUpdateLink, setNewUpdateLink] = useState('');
+  const [employeeData, setEmployeeData] = useState(null);
+  const [updateLink, setUpdateLink] = useState('');
+  const [submittedUpdates, setSubmittedUpdates] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const email = await AsyncStorage.getItem('employeeEmail');
-      setEmployeeEmail(email);
-      fetchAssignedProjects(email);
-      fetchUpdateHistory(email);
-    };
-    fetchData();
+    fetchEmployeeDetails();
+    fetchSubmittedUpdates();
   }, []);
 
-  const fetchAssignedProjects = async (email) => {
+  const fetchEmployeeDetails = async () => {
     try {
-      const res = await axios.get(`http://192.168.190.151:5000/api/projects/employee/${email}`);
-      setAssignedProjects(res.data.projects);
+      const email = await AsyncStorage.getItem('email');
+      const response = await axios.get(`http://192.168.190.151:5000/get-employee/${email}`);
+      setEmployeeData(response.data.employee);
     } catch (err) {
-      console.error('Error fetching assigned projects:', err);
+      console.error('Error fetching employee details:', err);
     }
   };
 
-  const fetchUpdateHistory = async (email) => {
+  const fetchSubmittedUpdates = async () => {
     try {
-      const res = await axios.get(`http://192.168.190.151:5000/api/updates/${email}`);
-      const updates = res.data.updates;
-
-      // Group updates by project ID
-      const grouped = {};
-      updates.forEach((upd) => {
-        if (!grouped[upd.projectId]) grouped[upd.projectId] = [];
-        grouped[upd.projectId].push(upd);
-      });
-      setProjectUpdates(grouped);
+      const email = await AsyncStorage.getItem('email');
+      const response = await axios.get(`http://192.168.190.151:5000/updates/${email}`);
+      setSubmittedUpdates(response.data.updates);
     } catch (err) {
-      console.error('Error fetching update history:', err);
+      console.error('Error fetching updates:', err);
     }
   };
 
-  const handleSubmitUpdate = async (projectId) => {
-    if (!newUpdateLink) {
-      Alert.alert('Error', 'Please enter a link');
+  const handleSubmitUpdate = async () => {
+    if (!updateLink.trim()) {
+      Alert.alert('Validation', 'Please enter a valid update link');
       return;
     }
 
     try {
-      await axios.post(`http://192.168.190.151:5000/api/updates`, {
-        employeeEmail,
-        projectId,
-        link: newUpdateLink,
+      const email = await AsyncStorage.getItem('email');
+      const res = await axios.post('http://192.168.190.151:5000/submit-update', {
+        employeeEmail: email,
+        projectName: employeeData?.projectName || '',
+        updateLink,
       });
 
-      Alert.alert('Success', 'Update submitted!');
-      setNewUpdateLink('');
-      fetchUpdateHistory(employeeEmail);
+      Alert.alert('Success', res.data.message);
+      setUpdateLink('');
+      fetchSubmittedUpdates(); // Refresh list
     } catch (err) {
       console.error('Error submitting update:', err);
-      Alert.alert('Failed', 'Could not submit update');
+      Alert.alert('Error', 'Failed to submit update');
     }
   };
 
-  const renderProjectItem = ({ item }) => {
+  if (!employeeData) {
     return (
-      <View style={styles.projectCard}>
-        <Text style={styles.projectTitle}>{item.projectName}</Text>
-        <Text style={styles.projectDesc}>{item.description}</Text>
-
-        <TextInput
-          placeholder="Paste your update link"
-          value={newUpdateLink}
-          onChangeText={setNewUpdateLink}
-          style={styles.input}
-        />
-        <Button title="Submit Update" onPress={() => handleSubmitUpdate(item._id)} />
-
-        <Text style={styles.subheader}>Your Previous Updates:</Text>
-        {(projectUpdates[item._id] || []).map((u, idx) => (
-          <Text key={idx} style={styles.linkText}>🔗 {u.link}</Text>
-        ))}
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading project details...</Text>
       </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>My Project Status</Text>
-      <FlatList
-        data={assignedProjects}
-        keyExtractor={(item) => item._id}
-        renderItem={renderProjectItem}
-        ListEmptyComponent={<Text>No assigned projects found.</Text>}
+      <Text style={styles.header}>My Project</Text>
+      <View style={styles.card}>
+        <Text style={styles.label}>Project Name:</Text>
+        <Text style={styles.value}>{employeeData.projectName || 'Not assigned'}</Text>
+
+        <Text style={styles.label}>Team:</Text>
+        <Text style={styles.value}>{employeeData.team || 'N/A'}</Text>
+
+        <Text style={styles.label}>Reporting Manager:</Text>
+        <Text style={styles.value}>{employeeData.reportingManager || 'N/A'}</Text>
+      </View>
+
+      <Text style={styles.header}>Submit Project Update</Text>
+      <TextInput
+        placeholder="Enter update link"
+        style={styles.input}
+        value={updateLink}
+        onChangeText={setUpdateLink}
       />
+      <Button title="Submit Update" onPress={handleSubmitUpdate} />
+
+      <Text style={styles.header}>Submitted Updates</Text>
+      {submittedUpdates.length === 0 ? (
+        <Text style={styles.noUpdateText}>No updates submitted yet.</Text>
+      ) : (
+        submittedUpdates.map((update, index) => (
+          <View key={index} style={styles.updateItem}>
+            <Text style={styles.updateText}>🔗 {update.updateLink}</Text>
+          </View>
+        ))
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#fff', flex: 1 },
-  header: { fontSize: 20, fontWeight: 'bold', marginBottom: 16 },
-  projectCard: {
-    backgroundColor: '#f1f2f6',
-    padding: 12,
-    marginBottom: 16,
-    borderRadius: 8,
-    elevation: 2,
+  container: { padding: 20 },
+  header: { fontSize: 18, fontWeight: 'bold', marginVertical: 10 },
+  card: {
+    backgroundColor: '#f2f2f2',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
   },
-  projectTitle: { fontSize: 18, fontWeight: '600' },
-  projectDesc: { fontSize: 14, marginBottom: 8 },
+  label: { fontWeight: 'bold' },
+  value: { marginBottom: 10 },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 8,
-    borderRadius: 6,
-    marginVertical: 8,
+    borderColor: '#888',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
   },
-  subheader: { marginTop: 8, fontWeight: '600' },
-  linkText: { color: '#0984e3', fontSize: 13, marginVertical: 2 },
+  updateItem: {
+    backgroundColor: '#e6f7ff',
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 4,
+  },
+  updateText: { color: '#007acc' },
+  noUpdateText: { color: '#666', fontStyle: 'italic' },
+  loadingText: { textAlign: 'center', marginTop: 50 },
 });

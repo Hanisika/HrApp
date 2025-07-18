@@ -1,48 +1,47 @@
+// routes/FormRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const User = require('../model/user');
+const Employee = require('../model/Employee'); // Make sure the path is correct
 
-// POST /add-employee/
 router.post('/', async (req, res) => {
   try {
     const {
-      name, email, phone, joiningDate,
-      department, designation, firmName, role
-    } = req.body;
-
-    if (!name || !email || !phone || !joiningDate || !department || !designation || !firmName) {
-      return res.status(400).json({ success: false, message: 'All fields are required.' });
-    }
-
-    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Employee already exists.' });
-    }
-
-    const parsedDate = new Date(joiningDate);
-    if (isNaN(parsedDate)) {
-      return res.status(400).json({ success: false, message: 'Invalid joining date.' });
-    }
-
-    const newUser = new User({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone.trim(),
-      joiningDate: parsedDate,
+      name,
+      email,
+      phone,
+      joiningDate,
       department,
       designation,
       firmName,
-      role: role || 'employee',
-      password: 'default123'
+    } = req.body;
+
+    console.log('🟨 Full Employee Payload:', req.body);
+    console.log('🔍 Fields:', { name, email, phone, joiningDate, department, designation, firmName });
+
+    if (!name || !email || !phone || !joiningDate || !department || !designation || !firmName) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    const parsedDate = new Date(joiningDate);
+
+    const newEmployee = new Employee({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      joiningDate: parsedDate,
+      department,
+      designation,
+      firmName:'mytech',
+      password: '123456',
     });
 
-    await newUser.save();
-    console.log('✅ Employee saved:', newUser.email);
-    return res.status(200).json({ success: true, message: 'Employee added successfully' });
+    await newEmployee.save();
+    res.status(201).json({ success: true, message: 'Employee added successfully' });
 
-  } catch (err) {
-    console.error('❌ Error in add-employee route:', err);
-    return res.status(500).json({ success: false, message: 'Server error' });
+  } catch (error) {
+    console.error('❌ Error adding employee:', error.message);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 

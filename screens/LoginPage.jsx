@@ -21,22 +21,22 @@ export default function LoginPage() {
         password: password.trim()
       });
 
-     if (response.data.success) {
-  const { role, hrEmail, firmName } = response.data;
+      console.log('📥 Server Response:', response.data);
 
-  // ✅ Save to AsyncStorage
-  await AsyncStorage.setItem('role', role); // 👈 THIS IS MISSING
-  if (hrEmail) {
-    await AsyncStorage.setItem('hrEmail', hrEmail);
-    await AsyncStorage.setItem('firmName', firmName || '');
-  }
+      if (response.data.success) {
+        const { role, hrEmail, firmName, name } = response.data;
 
-  navigation.navigate(role === 'hr' ? 'HRDashboard' : 'Dashboard', { role });
-} else {
+        await AsyncStorage.setItem('role', role);
+        await AsyncStorage.setItem('hrEmail', hrEmail);
+        await AsyncStorage.setItem('firmName', firmName || '');
+        await AsyncStorage.setItem('name', name || '');
+
+        navigation.navigate(role === 'hr' ? 'HRDashboard' : 'Dashboard', { role });
+      } else {
         Alert.alert('Login Failed', response.data.message || 'Invalid credentials.');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Login Error:', error);
       Alert.alert('Server Error', 'Unable to connect to the server.');
     }
   };
@@ -44,7 +44,7 @@ export default function LoginPage() {
   return (
     <View style={styles.container}>
       <View style={styles.loginBox}>
-        <Text style={styles.title}>Manager Login</Text>
+        <Text style={styles.title}>Login</Text>
 
         <TextInput
           style={styles.input}

@@ -1,7 +1,7 @@
 // routes/getEmployee.js
 const express = require('express');
 const router = express.Router();
-const User = require('../model/user');
+const User = require('../model/Employee');
 
 router.post('/', async (req, res) => {
    console.log("📩 Received get-employee request:", req.body);

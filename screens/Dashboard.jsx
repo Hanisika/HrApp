@@ -16,7 +16,7 @@ import EmployeeDetails from './EmployeeDetails';
 import CalendarTab from './Calendar';
 import LeaveForm from './LeaveForm';
 import ProjectAssignScreen from './projectAssign';
-import ProjectDetails from './projectDetails'; // 👈 new
+
 import ProjectStatus from './ProjectStatus';   // 👈 new
 
 const Tab = createBottomTabNavigator();
@@ -135,7 +135,8 @@ const Dashboard = () => {
       />
 
       {(role === 'hr' || role === 'manager') && (
-        <Tab.Screen
+     <>
+      <Tab.Screen
           name="Task Assign"
           component={ProjectAssignScreen}
           options={{
@@ -145,15 +146,29 @@ const Dashboard = () => {
             ),
           }}
         />
+         <Tab.Screen
+            name="Employee Form"
+            component={EmployeeForm}
+            options={{
+              title: 'Add Employee',
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="person-add" size={size} color={color} />
+              ),
+            }}
+          />
+     </>
+       
+      
       )}
 
       {role === 'manager' && (
+        
         <Tab.Screen
-          name="Project Details"
-          component={ProjectDetails}
+          name="Project Status"
+          component={ProjectStatus}
           options={{
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="document-text" size={size} color={color} />
+              <Ionicons name="time" size={size} color={color} />
             ),
           }}
         />

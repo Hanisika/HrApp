@@ -1,7 +1,7 @@
 // routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const User = require('../model/user');
+const User = require('../model/Employee');
 
 // Get all employees under same firm
 router.get('/get-employees/:firmName', async (req, res) => {
